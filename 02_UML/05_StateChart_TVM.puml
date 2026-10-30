@@ -1,0 +1,38 @@
+@startuml 05_StateChart_TVM
+!include _style.iuml
+title State Chart Diagram - TVM during a ticket transaction
+hide empty description
+[*] --> SelfTest : power on
+SelfTest --> Idle : devices OK
+SelfTest --> OutOfService : device / network fault
+Idle --> OutOfService : fault detected / out of paper
+OutOfService --> Maintenance : technician login
+Maintenance --> SelfTest : put in service
+
+state "Transaction Session" as Session {
+  [*] --> SelectingDestination
+  SelectingDestination --> SelectingTicket : destination selected
+  SelectingTicket --> SelectingDestination : back
+  SelectingTicket --> SelectingPayment : type & qty confirmed\n/ calculate total
+  SelectingPayment --> SelectingTicket : back
+  SelectingPayment --> WaitingForCard : choose Card
+  SelectingPayment --> DisplayingQR : choose QR / Wallet\n/ request QR
+  WaitingForCard --> Authorizing : card inserted / tapped
+  Authorizing --> PaymentFailed : declined\n[or timeout 30 s]
+  DisplayingQR --> PaymentFailed : failed\n[or QR expired 120 s]
+  PaymentFailed --> SelectingPayment : retry [attempts < 3]
+  Authorizing --> PaymentApproved : approved
+  DisplayingQR --> PaymentApproved : paid notification
+  PaymentApproved --> [*]
+}
+Idle --> Session : Start pressed
+Session --> Cancelling : Cancel pressed /\ninactivity 60 s + 10 s
+PaymentFailed --> Cancelling : [attempts = 3]
+Cancelling --> Idle : void pending payment
+Session --> PrintingTicket : payment approved
+PrintingTicket --> Completed : printed OK / capture payment
+PrintingTicket --> Refunding : printer error
+Refunding --> OutOfService : refund requested / log incident
+Completed --> Idle : after 10 s
+Idle --> [*] : shutdown
+@enduml

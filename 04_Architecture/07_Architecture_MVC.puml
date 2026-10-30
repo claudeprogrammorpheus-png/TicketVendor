@@ -1,0 +1,59 @@
+@startuml 07_Architecture_MVC
+!include ../02_UML/_style.iuml
+title Architecture Design - TVM (MVC, layered, system-in-a-box)
+skinparam componentStyle rectangle
+package "TVM Kiosk Application (C# .NET, WinForms)" {
+  package "View (Presentation)" {
+    [WelcomeView] as V1
+    [DestinationView] as V2
+    [TicketOptionView] as V3
+    [PaymentView] as V4
+    [SuccessView] as V5
+    [SalesReportView] as V6
+  }
+  package "Controller" {
+    [TicketController] as C1
+    [ReportController] as C2
+    [SessionTimer] as C3
+  }
+  package "Model (Domain + Services)" {
+    [Domain entities\nOrder, Ticket, Payment, Station] as M1
+    [FareService] as M2
+    [PaymentService] as M3
+    [Ticket signing\n(HMAC-SHA256)] as M4
+  }
+  package "Infrastructure" {
+    [Repositories\n(ADO.NET SqlClient)] as I1
+    [Payment Gateway Adapters\nCard / VietQR / MoMo / VNPay / ZaloPay] as I2
+    [Device HAL\nCardReader / Printer] as I3
+    [Sync Agent\n(fares, logs)] as I4
+  }
+  database "Local DB\n(SQL Server Express)" as LDB
+}
+cloud "Central Server\n(REST API)" as CS
+cloud "External payment APIs" as EXT
+node "Kiosk hardware" as HW
+
+V1 --> C1
+V2 --> C1
+V3 --> C1
+V4 --> C1
+V5 --> C1
+V6 --> C2
+C3 --> C1 : timeout
+C1 --> M1
+C1 --> M2
+C1 --> M3
+M1 --> M4
+C2 --> I1
+M2 --> I1
+M3 --> I2
+C1 --> I3
+I1 --> LDB
+I4 --> LDB
+I4 --> CS : HTTPS
+I2 --> CS : HTTPS / TLS 1.2+
+CS --> EXT
+I3 --> HW
+C1 ..> V4 : update view
+@enduml

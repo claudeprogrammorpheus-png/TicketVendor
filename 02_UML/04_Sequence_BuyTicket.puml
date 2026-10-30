@@ -1,0 +1,84 @@
+@startuml 04_Sequence_BuyTicket
+!include _style.iuml
+title Sequence Diagram - Buy a Ticket (main use case)
+autonumber
+actor Passenger
+boundary ":KioskView" as V
+control ":TicketController" as C
+entity ":TicketVendingMachine" as M
+control ":FareService" as F
+entity ":Order" as O
+control ":PaymentService" as PS
+participant "<<interface>>\n:IPaymentGateway" as G
+participant ":TicketPrinter" as PR
+database ":TransactionRepository" as DB
+
+Passenger -> V : press Start
+V -> C : StartSession()
+activate C
+C -> M : CheckDevices()
+M --> C : true (devices OK)
+C -> F : GetDestinations(originId)
+F --> C : List<Station>
+C --> V : ShowDestinations(list)
+deactivate C
+Passenger -> V : select destination
+V -> C : SelectDestination(stationId)
+C --> V : ShowTicketOptions(types)
+Passenger -> V : choose ticket type, quantity
+V -> C : SelectTicket(typeId, qty)
+activate C
+C -> F : GetFare(origin, dest, typeId)
+F --> C : unitPrice
+create O
+C -> O : <<create>> Order(origin, dest, type, qty, unitPrice)
+C -> O : CalculateTotal()
+O --> C : total
+C --> V : ShowPaymentMethods(total)
+deactivate C
+Passenger -> V : choose payment method
+V -> C : Pay(method)
+activate C
+C -> PS : CreatePayment(order, method)
+activate PS
+alt method = Card
+  V -> Passenger : prompt "Insert / tap card"
+  Passenger -> V : insert / tap card
+  PS -> G : Authorize(order)
+  G --> PS : Payment(status = Authorized, authCode)
+else method = BankQr / MoMo / VnPay / ZaloPay
+  PS -> G : Authorize(order)
+  G --> PS : QrPayment(qrContent, expiresAt)
+  PS --> C : qrContent
+  C --> V : ShowQr(qrContent, 120 s)
+  Passenger -> G : scan & confirm in mobile app
+  loop every 3 s until Captured or expired
+    PS -> G : CheckStatus(payment)
+    G --> PS : PaymentStatus
+  end
+end
+PS --> C : Payment
+deactivate PS
+alt payment approved
+  C -> O : MarkPaid(payment)
+  loop for each ticket (1..qty)
+    C -> O : IssueTicket()
+    O --> C : Ticket (id, signed QR)
+    C -> PR : Print(ticket)
+    PR --> C : true
+  end
+  C -> PS : Capture(payment)
+  C -> DB : Save(order, payment, tickets)
+  DB --> C : saved
+  C --> V : ShowSuccess(tickets)
+  V --> Passenger : "Please collect your ticket"
+else declined / failed / expired
+  C --> V : ShowError(reason, attemptsLeft)
+  V --> Passenger : show reason, offer retry
+end
+deactivate C
+note over C, PR
+  If Print() returns false: C -> PS : Refund(payment),
+  show refund reference (UC-08 Refund Payment).
+end note
+@enduml

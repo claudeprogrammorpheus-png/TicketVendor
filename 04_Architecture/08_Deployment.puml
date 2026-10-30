@@ -1,0 +1,48 @@
+@startuml 08_Deployment
+!include ../02_UML/_style.iuml
+title Deployment Diagram - Smart Ticketing System
+node "TVM Kiosk (x300)\n<<device>> Industrial PC\nWindows 10 IoT Enterprise" as K {
+  artifact "TVM.Demo.exe\n(.NET WinForms)" as A1
+  database "SQL Server Express\n(local cache + logs)" as A2
+  node "<<device>>\n21.5 inch touch screen" as D1
+  node "<<device>>\nEMV/NFC card reader\n(PCI PTS)" as D2
+  node "<<device>>\n80 mm thermal printer" as D3
+  node "<<device>>\n4G/LTE + LAN router" as D4
+}
+node "Data Center / Cloud" as DC {
+  node "Load Balancer / API Gateway\n(TLS termination)" as LB
+  node "App Server Cluster (x2)\nASP.NET Core Web API" as AS {
+    artifact "TicketingAPI" as T1
+    artifact "PaymentService\n(gateway adapters)" as T2
+    artifact "SyncService" as T3
+    artifact "ReportService" as T4
+  }
+  database "MS SQL Server\n(Always On primary + replica)\nTVM_DB" as DB
+}
+node "Back-office PC\n(web browser)" as BO
+node "Gate validators\n(QR scanner)" as GV
+cloud "Card Acquirer / Processor\n(Visa, Mastercard, NAPAS)" as ACQ
+cloud "NAPAS VietQR" as NAP
+cloud "MoMo API" as MOMO
+cloud "VNPay API" as VNP
+cloud "ZaloPay API" as ZLP
+
+A1 -- A2
+A1 -- D1 : HDMI / USB
+A1 -- D2 : USB (encrypted)
+A1 -- D3 : USB
+A1 -- D4
+D4 --> LB : HTTPS over VPN\n(4G or fibre)
+LB --> AS
+AS --> DB : TDS 1433 (TLS)
+T2 --> ACQ : ISO 8583 / REST
+T2 --> NAP : REST
+T2 --> MOMO : REST + HMAC
+T2 --> VNP : REST + HMAC
+T2 --> ZLP : REST + HMAC
+MOMO ..> LB : IPN webhook
+VNP ..> LB : IPN webhook
+ZLP ..> LB : IPN webhook
+BO --> LB : HTTPS
+GV --> LB : ticket validation sync
+@enduml

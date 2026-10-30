@@ -1,0 +1,66 @@
+@startuml 02_Activity_BuyTicket
+!include _style.iuml
+title Activity Diagram - Passenger buys a ticket at the TVM
+|Passenger|
+start
+:Press "Start";
+|TVM|
+:Check devices & network;
+if (All devices OK?) then (no)
+  :Show "Out of service";
+  stop
+else (yes)
+endif
+:Display destination list;
+|Passenger|
+:Select destination;
+|TVM|
+:Display ticket types & quantity;
+|Passenger|
+:Select ticket type and quantity (1-10);
+|TVM|
+:Calculate fare & show total;
+:Show payment methods;
+|Passenger|
+repeat
+  :Choose payment method;
+  if (Method?) then (Card)
+    |Passenger|
+    :Insert / tap card;
+    |TVM|
+    :Read card (EMV/NFC);
+    :Send authorization request;
+  else (QR / Wallet)
+    |TVM|
+    :Request dynamic QR from gateway;
+    :Display QR + 120 s countdown;
+    |Passenger|
+    :Scan QR with banking / wallet app\nand confirm payment;
+    |TVM|
+    :Wait for payment notification;
+  endif
+  |TVM|
+  backward :Show failure reason\n(attempts < 3);
+repeat while (Payment approved?) is (no) not (yes)
+:Print ticket(s) with signed QR code;
+if (Printed OK?) then (yes)
+  :Capture payment & save transaction;
+  :Show "Thank you" screen;
+  |Passenger|
+  :Collect ticket;
+else (no)
+  |TVM|
+  :Void / refund payment;
+  :Show refund reference;
+  :Log incident & go out of service;
+endif
+|TVM|
+:Return to idle screen;
+stop
+note right
+  Cancel button and 60 s inactivity
+  timeout are available on every step
+  before payment confirmation
+  (void pending payment -> idle).
+end note
+@enduml

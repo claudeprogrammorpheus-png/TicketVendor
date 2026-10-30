@@ -1,0 +1,37 @@
+@startuml 01_UseCase
+!include _style.iuml
+title Use Case Diagram - Ticket Vendor Machine (TVM)
+left to right direction
+skinparam linetype polyline
+actor Passenger as P
+actor Technician as T
+actor Administrator as A
+actor "Card Payment\nProcessor" as CPP <<system>>
+actor "QR / Wallet Gateway\n(VietQR, MoMo,\nVNPay, ZaloPay)" as QG <<system>>
+rectangle "Smart Ticketing System - TVM" {
+  usecase "UC-01\nBuy a Ticket" as UC1
+  usecase "UC-02\nSelect Destination" as UC2
+  usecase "UC-03\nMake Payment" as UC3
+  usecase "Pay by Card" as UC3a
+  usecase "Pay by QR /\nDigital Wallet" as UC3b
+  usecase "UC-04\nPrint Ticket" as UC4
+  usecase "UC-08\nRefund Payment" as UC8
+  usecase "UC-05\nPerform Maintenance" as UC5
+  usecase "UC-06\nManage Fares\n& Stations" as UC6
+  usecase "UC-07\nView Sales Report" as UC7
+}
+P -- UC1
+UC1 ..> UC2 : <<include>>
+UC1 ..> UC3 : <<include>>
+UC1 ..> UC4 : <<include>>
+UC3a --|> UC3
+UC3b --|> UC3
+UC8 ..> UC4 : <<extend>>\n[print failure]
+CPP -- UC3a
+QG -- UC3b
+CPP -- UC8
+QG -- UC8
+T -- UC5
+A -- UC6
+A -- UC7
+@enduml

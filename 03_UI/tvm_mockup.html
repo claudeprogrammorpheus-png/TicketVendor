@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>TVM Mockups</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Segoe UI", Arial, sans-serif; background: #0d2a45; width: 1280px; height: 800px; overflow: hidden; }
+  .screen { display: none; width: 1280px; height: 800px; background: #f4f7fb; flex-direction: column; }
+  .screen.active { display: flex; }
+  header { height: 84px; background: #1f4e79; color: #fff; display: flex; align-items: center; padding: 0 32px; gap: 18px; }
+  header .logo { width: 48px; height: 48px; border-radius: 12px; background: #ffc000; color: #1f4e79; font-weight: 800; font-size: 22px; display: grid; place-items: center; }
+  header h1 { font-size: 24px; font-weight: 600; flex: 1; }
+  header .meta { font-size: 16px; opacity: .85; text-align: right; }
+  .lang { display: flex; gap: 6px; }
+  .lang span { padding: 6px 12px; border: 2px solid #fff; border-radius: 8px; font-weight: 600; font-size: 15px; }
+  .lang span.on { background: #fff; color: #1f4e79; }
+  .steps { display: flex; gap: 8px; padding: 14px 32px 0; }
+  .steps div { flex: 1; height: 8px; border-radius: 4px; background: #c9d6e3; }
+  .steps div.done { background: #2e75b6; }
+  .steps-label { display: flex; padding: 6px 32px 0; color: #5b6b7b; font-size: 14px; }
+  .steps-label span { flex: 1; }
+  main { flex: 1; padding: 22px 32px; display: flex; gap: 24px; }
+  h2 { font-size: 30px; color: #1f2d3d; margin-bottom: 14px; }
+  footer { height: 96px; background: #fff; border-top: 1px solid #d7e0ea; display: flex; align-items: center; padding: 0 32px; gap: 16px; }
+  .btn { height: 64px; padding: 0 36px; border-radius: 14px; font-size: 22px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; border: 2px solid transparent; }
+  .primary { background: #2e75b6; color: #fff; }
+  .ghost { background: #fff; color: #1f4e79; border-color: #1f4e79; }
+  .danger { background: #fff; color: #c00000; border-color: #c00000; }
+  .spacer { flex: 1; }
+  .timer { color: #5b6b7b; font-size: 16px; }
+  .card { background: #fff; border-radius: 16px; box-shadow: 0 2px 10px rgba(31,78,121,.12); padding: 20px; }
+  /* welcome */
+  .hero { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 26px; text-align: center; }
+  .hero h2 { font-size: 46px; }
+  .hero p { font-size: 22px; color: #5b6b7b; }
+  .start { width: 420px; height: 130px; border-radius: 28px; font-size: 44px; background: #ffc000; color: #1f2d3d; font-weight: 800; display: grid; place-items: center; box-shadow: 0 8px 0 #bf9000; }
+  .pays { display: flex; gap: 14px; }
+  .chip { padding: 10px 18px; border-radius: 999px; background: #fff; border: 1px solid #c9d6e3; font-size: 17px; color: #1f4e79; font-weight: 600; }
+  /* destination */
+  .search { height: 60px; border: 2px solid #9fb6cc; border-radius: 12px; background: #fff; display: flex; align-items: center; padding: 0 18px; font-size: 20px; color: #8a99a8; margin-bottom: 14px; }
+  .tabs { display: flex; gap: 10px; margin-bottom: 14px; }
+  .tabs span { padding: 10px 22px; border-radius: 10px; background: #e3ebf3; font-size: 18px; font-weight: 600; color: #1f4e79; }
+  .tabs span.on { background: #1f4e79; color: #fff; }
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .st { height: 74px; background: #fff; border: 2px solid #d7e0ea; border-radius: 12px; padding: 10px 14px; font-size: 18px; font-weight: 600; color: #1f2d3d; }
+  .st small { display: block; font-weight: 400; color: #5b6b7b; font-size: 14px; }
+  .st.sel { border-color: #2e75b6; background: #deebf7; box-shadow: inset 0 0 0 2px #2e75b6; }
+  .side { width: 330px; }
+  .side h3 { font-size: 18px; color: #5b6b7b; margin-bottom: 10px; }
+  .pop { display: flex; flex-direction: column; gap: 10px; }
+  .pop div { padding: 14px; border-radius: 10px; background: #fff7e0; border: 1px solid #ffd966; font-size: 18px; font-weight: 600; }
+  /* ticket */
+  .opts { display: flex; gap: 18px; margin-bottom: 22px; }
+  .opt { flex: 1; height: 150px; border-radius: 16px; background: #fff; border: 2px solid #d7e0ea; padding: 20px; }
+  .opt b { font-size: 24px; display: block; }
+  .opt span { color: #5b6b7b; font-size: 17px; }
+  .opt .price { font-size: 28px; color: #1f4e79; font-weight: 700; margin-top: 12px; display: block; }
+  .opt.sel { border-color: #2e75b6; background: #deebf7; }
+  .qty { display: flex; align-items: center; gap: 18px; font-size: 22px; }
+  .qty .b { width: 70px; height: 70px; border-radius: 14px; background: #1f4e79; color: #fff; font-size: 40px; display: grid; place-items: center; }
+  .qty .n { font-size: 44px; font-weight: 700; width: 70px; text-align: center; }
+  .summary { width: 400px; }
+  .row { display: flex; justify-content: space-between; font-size: 19px; padding: 9px 0; border-bottom: 1px dashed #d7e0ea; }
+  .total { display: flex; justify-content: space-between; font-size: 30px; font-weight: 800; color: #1f4e79; padding-top: 14px; }
+  /* payment */
+  .methods { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; flex: 1; }
+  .m { border-radius: 18px; background: #fff; border: 2px solid #d7e0ea; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; font-size: 24px; font-weight: 700; color: #1f2d3d; }
+  .m .ic { width: 96px; height: 70px; border-radius: 12px; display: grid; place-items: center; font-size: 22px; color: #fff; font-weight: 800; }
+  .m small { font-weight: 400; font-size: 16px; color: #5b6b7b; }
+  .m.off { opacity: .4; }
+  /* qr */
+  .qrbox { width: 360px; height: 360px; background: #fff; border: 18px solid #fff; outline: 2px solid #d7e0ea; border-radius: 8px; position: relative; }
+
+  .count { font-size: 64px; font-weight: 800; color: #c55a11; }
+  .bar { height: 14px; background: #e3ebf3; border-radius: 7px; overflow: hidden; width: 100%; }
+  .bar div { height: 100%; width: 62%; background: #c55a11; }
+  ol { font-size: 21px; line-height: 1.9; padding-left: 26px; color: #1f2d3d; }
+  /* card */
+  .reader { width: 300px; height: 330px; border-radius: 24px; background: #2b2b2b; position: relative; margin: 0 auto; }
+  .reader .slot { position: absolute; left: 40px; right: 40px; bottom: 40px; height: 16px; background: #000; border-radius: 8px; }
+  .reader .nfc { position: absolute; left: 90px; top: 50px; width: 120px; height: 120px; border-radius: 50%; border: 6px solid #5ac8fa; }
+  .arrow { font-size: 60px; text-align: center; color: #2e75b6; }
+  /* success */
+  .ok { width: 120px; height: 120px; border-radius: 50%; background: #70ad47; color: #fff; font-size: 70px; display: grid; place-items: center; }
+  .ticket { width: 380px; background: #fff; border: 2px dashed #9fb6cc; border-radius: 12px; padding: 22px; font-family: Consolas, monospace; font-size: 17px; line-height: 1.6; }
+  .ticket .q { width: 130px; height: 130px; float: right;  }
+  .err { width: 120px; height: 120px; border-radius: 50%; background: #c00000; color: #fff; font-size: 70px; display: grid; place-items: center; }
+</style>
+</head>
+<body>
+
+<!-- 1. Welcome -->
+<section class="screen" id="welcome">
+  <header><div class="logo">M</div><h1>Smart Ticketing - Ben Thanh Station</h1><div class="lang"><span>VI</span><span class="on">EN</span></div></header>
+  <div class="hero">
+    <h2>Buy Bus &amp; MRT tickets</h2>
+    <p>Touch the button below to start. Cashless machine.</p>
+    <div class="start">START</div>
+    <div class="pays"><span class="chip">VISA / Mastercard / JCB</span><span class="chip">NAPAS</span><span class="chip">VietQR</span><span class="chip">MoMo</span><span class="chip">VNPay</span><span class="chip">ZaloPay</span></div>
+    <p style="font-size:16px">Machine TVM-BT-01 &middot; In service &middot; Hotline 1900 xxxx</p>
+  </div>
+</section>
+
+<!-- 2. Destination -->
+<section class="screen" id="destination">
+  <header><div class="logo">M</div><h1>Step 1 of 3 - Choose your destination</h1><div class="lang"><span>VI</span><span class="on">EN</span></div></header>
+  <div class="steps"><div class="done"></div><div></div><div></div></div>
+  <div class="steps-label"><span>Destination</span><span>Ticket</span><span>Payment</span></div>
+  <main>
+    <div style="flex:1">
+      <div class="search">&#128269;&nbsp; Search station name...</div>
+      <div class="tabs"><span class="on">MRT Line 1</span><span>Bus routes</span><span>All A-Z</span></div>
+      <div class="grid">
+        <div class="st">Opera House<small>Line 1 &middot; 1 stop</small></div>
+        <div class="st">Ba Son<small>Line 1 &middot; 2 stops</small></div>
+        <div class="st">Van Thanh<small>Line 1 &middot; 3 stops</small></div>
+        <div class="st">Tan Cang<small>Line 1 &middot; 4 stops</small></div>
+        <div class="st">Thao Dien<small>Line 1 &middot; 5 stops</small></div>
+        <div class="st">An Phu<small>Line 1 &middot; 6 stops</small></div>
+        <div class="st">Rach Chiec<small>Line 1 &middot; 7 stops</small></div>
+        <div class="st">Phuoc Long<small>Line 1 &middot; 8 stops</small></div>
+        <div class="st">Binh Thai<small>Line 1 &middot; 9 stops</small></div>
+        <div class="st sel">Thu Duc<small>Line 1 &middot; 10 stops</small></div>
+        <div class="st">High-Tech Park<small>Line 1 &middot; 11 stops</small></div>
+        <div class="st">National University<small>Line 1 &middot; 12 stops</small></div>
+      </div>
+    </div>
+    <div class="side card">
+      <h3>POPULAR</h3>
+      <div class="pop"><div>Suoi Tien Bus Terminal</div><div>National University</div><div>Thao Dien</div><div>Tan Son Nhat Airport (Bus 109)</div></div>
+    </div>
+  </main>
+  <footer><div class="btn danger">Cancel</div><span class="timer">Session ends after 60 s of inactivity</span><div class="spacer"></div><div class="btn primary">Next &rarr;</div></footer>
+</section>
+
+<!-- 3. Ticket -->
+<section class="screen" id="ticket">
+  <header><div class="logo">M</div><h1>Step 2 of 3 - Ticket type &amp; quantity</h1><div class="lang"><span>VI</span><span class="on">EN</span></div></header>
+  <div class="steps"><div class="done"></div><div class="done"></div><div></div></div>
+  <div class="steps-label"><span>Destination</span><span>Ticket</span><span>Payment</span></div>
+  <main>
+    <div style="flex:1">
+      <h2>Ben Thanh &rarr; Thu Duc</h2>
+      <div class="opts">
+        <div class="opt sel"><b>Single trip</b><span>One entry, valid until 23:59 today</span><span class="price">16,000 &#8363;</span></div>
+        <div class="opt"><b>Day pass</b><span>Unlimited rides until 23:59 today</span><span class="price">40,000 &#8363;</span></div>
+      </div>
+      <div class="qty">Quantity <div class="b">&minus;</div><div class="n">2</div><div class="b">+</div><span style="color:#5b6b7b;font-size:17px">max 10</span></div>
+    </div>
+    <div class="summary card">
+      <h2 style="font-size:24px">Order summary</h2>
+      <div class="row"><span>From</span><b>Ben Thanh</b></div>
+      <div class="row"><span>To</span><b>Thu Duc</b></div>
+      <div class="row"><span>Ticket</span><b>Single trip</b></div>
+      <div class="row"><span>Unit fare</span><b>16,000 &#8363;</b></div>
+      <div class="row"><span>Quantity</span><b>2</b></div>
+      <div class="total"><span>Total</span><span>32,000 &#8363;</span></div>
+    </div>
+  </main>
+  <footer><div class="btn danger">Cancel</div><div class="btn ghost">&larr; Back</div><div class="spacer"></div><div class="btn primary">Continue to payment &rarr;</div></footer>
+</section>
+
+<!-- 4. Payment method -->
+<section class="screen" id="payment">
+  <header><div class="logo">M</div><h1>Step 3 of 3 - Choose payment method</h1><div class="meta">Total<br><b style="font-size:26px">32,000 &#8363;</b></div></header>
+  <div class="steps"><div class="done"></div><div class="done"></div><div class="done"></div></div>
+  <div class="steps-label"><span>Destination</span><span>Ticket</span><span>Payment</span></div>
+  <main style="flex-direction:column">
+    <div class="methods">
+      <div class="m"><div class="ic" style="background:#1f4e79">CARD</div>Credit / Debit card<small>Insert or tap - Visa, Mastercard, JCB, NAPAS</small></div>
+      <div class="m"><div class="ic" style="background:#00a65a">QR</div>Bank QR (VietQR)<small>Scan with any banking app</small></div>
+      <div class="m"><div class="ic" style="background:#a50064">MoMo</div>MoMo wallet<small>Scan with MoMo app</small></div>
+      <div class="m"><div class="ic" style="background:#005baa">VNPAY</div>VNPay QR<small>Scan with VNPay / bank app</small></div>
+      <div class="m"><div class="ic" style="background:#0068ff">Zalo</div>ZaloPay<small>Scan with ZaloPay app</small></div>
+      <div class="m off"><div class="ic" style="background:#7f7f7f">CASH</div>Cash<small>Not supported on this machine</small></div>
+    </div>
+  </main>
+  <footer><div class="btn danger">Cancel</div><div class="btn ghost">&larr; Back</div><div class="spacer"></div><span class="timer">Attempt 1 of 3</span></footer>
+</section>
+
+<!-- 5. QR payment -->
+<section class="screen" id="qr">
+  <header><div class="logo">M</div><h1>Scan to pay with MoMo</h1><div class="meta">Total<br><b style="font-size:26px">32,000 &#8363;</b></div></header>
+  <main style="align-items:center; justify-content:center; gap:60px">
+    <div class="qrbox"></div>
+    <div style="width:520px; display:flex; flex-direction:column; gap:18px">
+      <div style="font-size:20px;color:#5b6b7b">QR code expires in</div>
+      <div class="count">01:14</div>
+      <div class="bar"><div></div></div>
+      <ol><li>Open the MoMo app on your phone</li><li>Tap <b>Scan QR</b> and point at the code</li><li>Confirm payment of <b>32,000 &#8363;</b></li><li>Wait - your ticket will print automatically</li></ol>
+      <div style="font-size:17px;color:#2e75b6">&#9679; Waiting for payment confirmation...</div>
+    </div>
+  </main>
+  <footer><div class="btn danger">Cancel payment</div><div class="spacer"></div><div class="btn ghost">Use another method</div></footer>
+</section>
+
+<!-- 6. Card payment -->
+<section class="screen" id="card">
+  <header><div class="logo">M</div><h1>Pay by card</h1><div class="meta">Total<br><b style="font-size:26px">32,000 &#8363;</b></div></header>
+  <main style="align-items:center; justify-content:center; gap:80px">
+    <div><div class="reader"><div class="nfc"></div><div class="slot"></div></div><div class="arrow">&#8595;</div></div>
+    <div style="width:520px">
+      <h2 style="font-size:38px">Insert or tap your card</h2>
+      <p style="font-size:21px;color:#5b6b7b;line-height:1.6">Use the card reader below the screen.<br>Enter your PIN on the keypad only if asked.<br>Do not remove the card until prompted.</p>
+      <div class="card" style="margin-top:24px;font-size:19px">Status: <b style="color:#2e75b6">Waiting for card...</b></div>
+    </div>
+  </main>
+  <footer><div class="btn danger">Cancel payment</div><div class="spacer"></div><span class="timer">Card timeout 30 s</span></footer>
+</section>
+
+<!-- 7. Success -->
+<section class="screen" id="success">
+  <header><div class="logo">M</div><h1>Payment successful</h1><div class="lang"><span>VI</span><span class="on">EN</span></div></header>
+  <main style="align-items:center; justify-content:center; gap:80px">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:20px;width:460px;text-align:center">
+      <div class="ok">&#10003;</div>
+      <h2 style="font-size:40px">Thank you!</h2>
+      <p style="font-size:22px;color:#5b6b7b">Please collect your 2 tickets from the tray below.</p>
+      <p style="font-size:17px;color:#5b6b7b">E-invoice lookup code: <b>TVM-8F3K-21QX</b></p>
+    </div>
+    <div class="ticket" style="white-space:pre"><div class="q"></div>METRO HCMC - LINE 1<br>TICKET  TK2610300012<br>FROM    Ben Thanh<br>TO      Thu Duc<br>TYPE    Single trip<br>FARE    16,000 VND<br>PAID    MoMo<br>ISSUED  30/10/2026 08:42<br>VALID   until 30/10/2026 23:59</div>
+  </main>
+  <footer><span class="timer">Returning to start screen in 10 s</span><div class="spacer"></div><div class="btn primary">Done</div></footer>
+</section>
+
+<!-- 8. Error -->
+<section class="screen" id="error">
+  <header><div class="logo">M</div><h1>Payment not completed</h1><div class="lang"><span>VI</span><span class="on">EN</span></div></header>
+  <main style="align-items:center; justify-content:center; gap:60px">
+    <div class="err">!</div>
+    <div style="width:620px">
+      <h2 style="font-size:38px">Your card was declined</h2>
+      <p style="font-size:21px;color:#5b6b7b;line-height:1.6">Your bank did not approve this payment. You have not been charged.<br>You can try again or choose another payment method.</p>
+      <p style="font-size:18px;margin-top:14px">Attempts remaining: <b>2</b></p>
+    </div>
+  </main>
+  <footer><div class="btn danger">Cancel</div><div class="spacer"></div><div class="btn ghost">Other method</div><div class="btn primary">Try again</div></footer>
+</section>
+
+<script>
+  const id = (location.hash || "#welcome").slice(1);
+  document.getElementById(id).classList.add("active");
+  // draw a fake QR pattern (placeholder for the real gateway QR)
+  function fakeQr(el, n) {
+    let seed = 7, rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    const finder = (x, y) => [[0,0],[n-7,0],[0,n-7]].some(([a,b]) => x>=a && x<a+7 && y>=b && y<b+7);
+    const fill = (x, y) => { for (const [a,b] of [[0,0],[n-7,0],[0,n-7]]) if (x>=a && x<a+7 && y>=b && y<b+7) { const i=x-a, j=y-b; return i==0||j==0||i==6||j==6||(i>=2&&i<=4&&j>=2&&j<=4); } return rnd() > .5; };
+    let r = ""; for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (fill(x, y)) r += `<rect x="${x}" y="${y}" width="1" height="1"/>`;
+    el.innerHTML = `<svg viewBox="0 0 ${n} ${n}" width="100%" height="100%" shape-rendering="crispEdges" fill="#1f2d3d">${r}</svg>`;
+  }
+  document.querySelectorAll(".qrbox, .ticket .q").forEach(e => fakeQr(e, 29));
+</script>
+</body>
+</html>

@@ -1,0 +1,159 @@
+@startuml 06_Class_Domain
+!include _style.iuml
+title Class Diagram - Core domain model (Buy a Ticket)
+skinparam classAttributeIconSize 0
+
+enum MachineStatus {
+  InService
+  OutOfService
+  Maintenance
+}
+enum TransportMode {
+  Bus
+  MRT
+}
+enum OrderStatus {
+  Created
+  AwaitingPayment
+  Paid
+  Completed
+  Cancelled
+  Refunded
+}
+enum PaymentStatus {
+  Pending
+  Authorized
+  Captured
+  Failed
+  Voided
+  Refunded
+}
+enum PaymentMethod {
+  Card
+  BankQr
+  Momo
+  VnPay
+  ZaloPay
+}
+
+class TicketVendingMachine {
+  - machineId : string
+  - status : MachineStatus
+  + StartSession() : void
+  + CheckDevices() : bool
+  + SetStatus(s : MachineStatus) : void
+}
+class Station {
+  - stationId : int
+  - code : string
+  - name : string
+  - line : string
+  - mode : TransportMode
+  - isActive : bool
+}
+class TicketType {
+  - ticketTypeId : int
+  - name : string
+  - validityHours : int
+  - maxRides : int
+}
+class Fare {
+  - fareId : int
+  - price : decimal
+}
+class Order {
+  - orderId : Guid
+  - quantity : int
+  - unitPrice : decimal
+  - totalAmount : decimal
+  - status : OrderStatus
+  - createdAt : DateTime
+  + CalculateTotal() : decimal
+  + MarkPaid(p : Payment) : void
+  + IssueTicket() : Ticket
+  + Cancel() : void
+}
+abstract class Payment {
+  - paymentId : Guid
+  - amount : decimal
+  - method : PaymentMethod
+  - status : PaymentStatus
+  - gatewayRef : string
+  - paidAt : DateTime?
+  + {abstract} Describe() : string
+}
+class CardPayment {
+  - maskedPan : string
+  - cardScheme : string
+  - authCode : string
+  + Describe() : string
+}
+class QrPayment {
+  - provider : string
+  - qrContent : string
+  - expiresAt : DateTime
+  + IsExpired() : bool
+  + Describe() : string
+}
+class Ticket {
+  - ticketId : string
+  - issuedAt : DateTime
+  - validUntil : DateTime
+  - signature : string
+  + GenerateQrPayload(secret : string) : string
+  + IsValid(now : DateTime) : bool
+}
+interface IPaymentGateway {
+  + Authorize(order : Order) : Payment
+  + CheckStatus(p : Payment) : PaymentStatus
+  + Capture(p : Payment) : bool
+  + Refund(p : Payment) : bool
+}
+class CardGateway
+class QrWalletGateway {
+  - provider : PaymentMethod
+}
+class FareService {
+  + GetDestinations(originId : int) : List<Station>
+  + GetFare(o : int, d : int, t : int) : decimal
+}
+class PaymentService {
+  + CreatePayment(o : Order, m : PaymentMethod) : Payment
+  + Capture(p : Payment) : bool
+  + Refund(p : Payment) : bool
+}
+class TicketController {
+  + StartSession() : void
+  + SelectDestination(stationId : int) : void
+  + SelectTicket(typeId : int, qty : int) : void
+  + Pay(m : PaymentMethod) : Payment
+  + Cancel() : void
+}
+class TicketPrinter {
+  - paperLevel : int
+  + Print(t : Ticket) : bool
+  + IsReady() : bool
+}
+
+TicketVendingMachine "*" --> "1" Station : located at >
+TicketVendingMachine "1" o-- "1" TicketPrinter
+TicketVendingMachine "1" -- "0..*" Order : sells >
+Order "*" --> "1" Station : origin
+Order "*" --> "1" Station : destination
+Order "*" --> "1" TicketType
+Order "1" *-- "0..10" Ticket : issues >
+Order "1" -- "0..*" Payment : paid by >
+Payment <|-- CardPayment
+Payment <|-- QrPayment
+Fare "*" --> "1" Station : from
+Fare "*" --> "1" Station : to
+Fare "*" --> "1" TicketType
+IPaymentGateway <|.. CardGateway
+IPaymentGateway <|.. QrWalletGateway
+PaymentService --> "1..*" IPaymentGateway : uses
+TicketController --> TicketVendingMachine
+TicketController --> FareService
+TicketController --> PaymentService
+TicketController ..> Order : <<create>>
+FareService ..> Fare
+@enduml

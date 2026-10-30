@@ -1,0 +1,57 @@
+@startuml 03_Activity_PaymentGateway
+!include _style.iuml
+title Activity Diagram - Integration with external payment gateways (MoMo / VNPay / ZaloPay)
+|TVM Client|
+start
+:Passenger chooses wallet\n(MoMo / VNPay / ZaloPay);
+:Send CreatePayment(orderId, amount, provider);
+|Central Server\n(Payment Service)|
+:Validate order & amount;
+:Select gateway adapter (Strategy);
+:Build request + HMAC-SHA256 signature\nwith merchant secret key;
+|Payment Gateway\n(MoMo / VNPay / ZaloPay)|
+:Verify signature & merchant;
+:Create payment transaction;
+:Return payUrl / QR content + transId;
+|Central Server\n(Payment Service)|
+:Store payment (status = PENDING);
+|TVM Client|
+:Render QR code + start 120 s countdown;
+fork
+  |Passenger Mobile App|
+  :Scan QR & confirm payment\n(PIN / biometric);
+  |Payment Gateway\n(MoMo / VNPay / ZaloPay)|
+  :Debit customer wallet / bank account;
+  :Send IPN (webhook) with result + signature;
+  |Central Server\n(Payment Service)|
+  :Verify IPN signature & amount;
+  :Update payment status (PAID / FAILED);
+  :Reply HTTP 200 to gateway (ack);
+fork again
+  |TVM Client|
+  while (Status pending and QR not expired?) is (yes)
+    :Poll payment status every 3 s;
+  endwhile (no)
+end fork
+|Central Server\n(Payment Service)|
+if (Status = PAID?) then (yes)
+  |TVM Client|
+  :Print ticket;
+  if (Print OK?) then (yes)
+    :Confirm sale to server;
+  else (no)
+    |Central Server\n(Payment Service)|
+    :Call gateway Refund API;
+    |Payment Gateway\n(MoMo / VNPay / ZaloPay)|
+    :Refund to customer;
+  endif
+else (no / expired)
+  |Central Server\n(Payment Service)|
+  :Call gateway Cancel API (if pending);
+  |TVM Client|
+  :Show failure, offer other method;
+endif
+|Central Server\n(Payment Service)|
+:Nightly: reconcile transactions\nwith gateway settlement file;
+stop
+@enduml
